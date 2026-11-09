@@ -24,6 +24,7 @@
 
                                 <form action="{{ route('login.process') }}" method="POST">
                                     @csrf
+                                    <input type="hidden" name="auth_form" value="login">
 
                                     <input type="email" name="email"
                                         placeholder="Email Address"
@@ -35,9 +36,13 @@
                                     <input type="submit" value="Login">
                                 </form>
 
-                                @error('email')
-                                    <p style="color:red;">{{ $message }}</p>
-                                @enderror
+                                @if (old('auth_form') === 'login' && $errors->any())
+                                    <div class="alert alert-danger">
+                                        @foreach ($errors->all() as $error)
+                                            <p>{{ $error }}</p>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- REGISTER -->
@@ -46,6 +51,7 @@
 
                                 <form action="{{ route('register.process') }}" method="POST">
                                     @csrf
+                                    <input type="hidden" name="auth_form" value="register">
 
                                     <input type="text" name="name"
                                         placeholder="Full Name" required>
@@ -61,6 +67,14 @@
 
                                     <input type="submit" value="Register">
                                 </form>
+
+                                @if (old('auth_form') === 'register' && $errors->any())
+                                    <div class="alert alert-danger">
+                                        @foreach ($errors->all() as $error)
+                                            <p>{{ $error }}</p>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="cta">
@@ -76,14 +90,24 @@
 </div>
 
 <script>
-    $('.toggle').click(function () {
-        $(this).children('i').toggleClass('fa-pencil');
+    $(function () {
+        $('.toggle').click(function () {
+            $(this).children('i').toggleClass('fa-pencil');
 
-        $('.form').animate({
-            height: "toggle",
-            'padding-top': 'toggle',
-            'padding-bottom': 'toggle',
-            opacity: "toggle"
-        }, "slow");
+            $('.form').animate({
+                height: "toggle",
+                'padding-top': 'toggle',
+                'padding-bottom': 'toggle',
+                opacity: "toggle"
+            }, "slow");
+        });
+
+        var authForm = @json(old('auth_form', session('auth_modal')));
+        if (authForm) {
+            var forms = $('.form-module .form');
+            forms.eq(0).toggle(authForm !== 'register');
+            forms.eq(1).toggle(authForm === 'register');
+            $('#myModal').modal('show');
+        }
     });
 </script>

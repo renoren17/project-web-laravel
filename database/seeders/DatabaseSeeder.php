@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             ProfileSeeder::class,
             UserSeeder::class,
-            AdminSeeder::class,
             KritikSeeder::class,
         ]);
     }

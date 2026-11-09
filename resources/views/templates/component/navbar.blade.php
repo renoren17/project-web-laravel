@@ -58,9 +58,17 @@
                         </li>
 
                         @auth
-                            <li>
-                                <a href="{{ route('profile') }}">My Profile</a>
-                            </li>
+                            @can('user')
+                                <li>
+                                    <a href="{{ route('profile') }}">My Profile</a>
+                                </li>
+                            @endcan
+
+                            @can('admin')
+                                <li>
+                                    <a href="{{ route('admin.dashboard') }}">Admin</a>
+                                </li>
+                            @endcan
 
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">

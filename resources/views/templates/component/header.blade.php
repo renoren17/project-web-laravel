@@ -18,12 +18,19 @@
             <ul>
                 @guest
                     <li>
-                        <a href="{{ route('login') }}">LOGIN / SIGN UP</a>
+                        <a href="#" data-toggle="modal" data-target="#myModal">LOGIN / SIGN UP</a>
                     </li>
                 @else
-                    <li>
-                        <a href="{{ route('profile') }}">MY PROFILE</a>
-                    </li>
+                    @can('user')
+                        <li>
+                            <a href="{{ route('profile') }}">MY PROFILE</a>
+                        </li>
+                    @endcan
+                    @can('admin')
+                        <li>
+                            <a href="{{ route('admin.dashboard') }}">ADMIN</a>
+                        </li>
+                    @endcan
                 @endguest
             </ul>
         </div>

@@ -2,38 +2,66 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Profile;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Faker\Factory as Faker;
-use App\Models\{User, Profile};
+use RuntimeException;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
-        $faker = Faker::create('id_ID');
+        $name = config('admin.name');
+        $email = config('admin.email');
+        $password = config('admin.password');
 
-        $profile = Profile::create([
-            "alamat"    => $faker->address,
-            "umur"    => $faker->numberBetween(1,50),
-            "bio"      => 'administrator',
-        ]);
+        if (! $name || ! filter_var($email, FILTER_VALIDATE_EMAIL) || ! $password) {
+            throw new RuntimeException('Set ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD before running AdminSeeder.');
+        }
 
-        User::create([
-            'name' => 'admin',
-            'email' => 'admin@example.com',
-            'email_verified_at' => now(),
-            'password' => Hash::make('12345678'),
-            'remember_token' => Str::random(10),
-            'role_id' => 2,
-            'profile_id' => $profile->id,
-        ]);
+        if (strlen($password) < 12) {
+            throw new RuntimeException('ADMIN_PASSWORD must contain at least 12 characters.');
+        }
+
+        $role = Role::where('name', 'admin')->first();
+
+        if (! $role) {
+            throw new RuntimeException('The admin role is missing. Seed roles before running AdminSeeder.');
+        }
+
+        DB::transaction(function () use ($name, $email, $password, $role) {
+            $user = User::where('email', $email)->first();
+
+            if ($user && $user->role?->name !== 'admin') {
+                throw new RuntimeException('The configured admin email belongs to a non-admin account.');
+            }
+
+            $profile = $user?->profile;
+            if (! $profile) {
+                $profile = Profile::create([
+                    'alamat' => '',
+                    'umur' => 17,
+                    'bio' => 'administrator',
+                ]);
+            }
+
+            $attributes = [
+                'name' => $name,
+                'email' => $email,
+                'password' => Hash::make($password),
+                'role_id' => $role->id,
+                'profile_id' => $profile->id,
+                'email_verified_at' => now(),
+            ];
+
+            if ($user) {
+                $user->update($attributes);
+            } else {
+                User::create($attributes);
+            }
+        });
     }
 }
