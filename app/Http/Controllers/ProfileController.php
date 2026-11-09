@@ -2,65 +2,50 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Profile;
-use App\Http\Requests\StoreProfileRequest;
-use App\Http\Requests\UpdateProfileRequest;
+use App\Models\Genre;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function show()
     {
-        //
+        $user = Auth::user();
+        $genres = Genre::all();
+
+        return view('profile.show', compact('user', 'genres'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function edit()
     {
-        //
+        $user = Auth::user();
+        $genres = Genre::all();
+
+        return view('profile.edit', compact('user', 'genres'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreProfileRequest $request)
+    public function update(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'umur' => ['required', 'integer', 'min:1', 'max:120'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'alamat' => ['nullable', 'string', 'max:255'],
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Profile $profile)
-    {
-        //
-    }
+        $user = Auth::user();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Profile $profile)
-    {
-        //
-    }
+        $user->update([
+            'name' => $validated['name'],
+        ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateProfileRequest $request, Profile $profile)
-    {
-        //
-    }
+        $user->profile()->firstOrFail()->update([
+            'umur' => $validated['umur'],
+            'bio' => $validated['bio'] ?? '',
+            'alamat' => $validated['alamat'] ?? '',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Profile $profile)
-    {
-        //
+        return redirect()->route('profile')
+            ->with('success', 'Profil berhasil diperbarui!');
     }
 }
